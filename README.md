@@ -327,6 +327,12 @@ Releases: bump the version in `pyproject.toml` and `server.json`, then push a `v
 
 Unofficial and not affiliated with or endorsed by qavanin.ir or the Iranian government. It reads the pages of the qavanin.ir website, which can change without notice, and it is a research aid, not legal advice. Please keep request rates reasonable.
 
+## Author
+
+<a href="https://www.linkedin.com/in/sepehr-radmard"><img src="https://raw.githubusercontent.com/sepehr071/awesome-iran-mcp/main/assets/author-banner.png" alt="Sepehr Radmard: open-source MCP servers for the Iranian web. LinkedIn: linkedin.com/in/sepehr-radmard" width="100%"></a>
+
+Built and maintained by **Sepehr Radmard** (سپهر رادمرد). Connect on [LinkedIn](https://www.linkedin.com/in/sepehr-radmard) or follow [@sepehr071 on GitHub](https://github.com/sepehr071) for more MCP servers for Iranian websites, all listed in [awesome-iran-mcp](https://github.com/sepehr071/awesome-iran-mcp). If this saves you time, a star on the repo helps other people find it.
+
 ## License
 
 [MIT](https://github.com/sepehr071/qavanin-mcp/blob/main/LICENSE)
