@@ -1,13 +1,13 @@
 [project]
 name = "qavanin-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Unofficial read-only MCP server for qavanin.ir: search Iranian laws and regulations, read their full text, amendments and status."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Sepehr Radmard", email = "sepehrr80@gmail.com" }]
 requires-python = ">=3.10"
-keywords = ["mcp", "model-context-protocol", "qavanin", "iran", "law", "legal", "regulations"]
+keywords = ["mcp", "mcp-server", "model-context-protocol", "iran", "persian", "qavanin", "qavanin-ir", "iranian-law", "laws", "regulations", "legal", "court-votes", "legal-research", "ai-agents"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
