@@ -1,6 +1,6 @@
 [project]
 name = "qavanin-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "Unofficial read-only MCP server for qavanin.ir: search Iranian laws and regulations, read their full text, amendments and status."
 readme = "README.md"
 license = "MIT"
