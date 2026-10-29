@@ -29,6 +29,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/sepehr071/qavanin-mcp"
 Issues = "https://github.com/sepehr071/qavanin-mcp/issues"
+Website = "https://mcpfarsi.ir/servers/qavanin/"
 
 [project.scripts]
 qavanin-mcp = "qavanin_mcp.server:main"

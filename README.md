@@ -11,6 +11,7 @@ Search about 168,000 documents by title or full text, read a law or a single art
 [![CI](https://github.com/sepehr071/qavanin-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/sepehr071/qavanin-mcp/actions/workflows/ci.yml)
 [![MCP Registry](https://img.shields.io/badge/MCP_Registry-io.github.sepehr071%2Fqavanin--mcp-7c3aed)](https://registry.modelcontextprotocol.io/?q=qavanin-mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-16a34a)](https://github.com/sepehr071/qavanin-mcp/blob/main/LICENSE)
+[![mcpfarsi](https://mcpfarsi.ir/badge/qavanin.svg)](https://mcpfarsi.ir/servers/qavanin/)
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_qavanin--mcp-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=qavanin&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22qavanin-mcp%22%5D%7D)
 
@@ -322,6 +323,7 @@ Releases: bump the version in `pyproject.toml` and `server.json`, then push a `v
 - [Iran News MCP server](https://github.com/sepehr071/iran-news-mcp) for Iranian news
 - [Iran Apps MCP server](https://github.com/sepehr071/iran-apps-mcp) for Iranian apps
 - [iran-mcp](https://github.com/sepehr071/iran-mcp): catalog of all Iranian-service MCP servers
+- Listed on [mcpfarsi.ir](https://mcpfarsi.ir/servers/qavanin/), the Persian MCP marketplace
 
 ## Disclaimer
 
