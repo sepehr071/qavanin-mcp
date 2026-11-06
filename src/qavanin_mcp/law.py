@@ -13,7 +13,7 @@ from .text import ascii_digits, fa, one_line, plain
 
 IDS = Annotated[
     str,
-    Field(pattern=r"^\d{1,20}$", description="Law id (IDS) from qv_search, digits only, e.g. '12021850837713548188'."),
+    Field(pattern=r"^\d{1,20}$", description="Id from qv_search, e.g. '12021850837713548188'."),
 ]
 STATUS = {"": None, "green": "amended", "red": "repealed", "brown": "opinion"}
 STRUCTURE = re.compile(r"^(?:ماده|فصل|مبحث|باب|کتاب|قسمت|بخش|مقدمه)")
@@ -113,26 +113,20 @@ async def qv_law(
     ids: IDS,
     article: Annotated[
         str | None,
-        Field(max_length=40, description="Only this article with its notes, e.g. '10', 'ماده 10', '10 مکرر'."),
+        Field(max_length=40, description="Only this article with its notes, e.g. '10', '10 مکرر'."),
     ] = None,
     date: Annotated[
         str | None,
-        Field(description="Jalali 'YYYY/MM/DD': the text as it stood on that date (before later amendments)."),
+        Field(description="Jalali 'YYYY/MM/DD': text as of that date."),
     ] = None,
-    with_opinions: Annotated[
-        bool, Field(description="Add interpretive opinions (نظر تفسیری) as extra sections.")
-    ] = False,
-    offset: Annotated[
-        int, Field(ge=0, description="Skip this many sections (use next_offset from the last call).")
-    ] = 0,
-    max_chars: Annotated[int, Field(ge=500, le=100000, description="Text budget per call.")] = 15000,
+    with_opinions: Annotated[bool, Field(description="Add interpretive opinions (نظر تفسیری).")] = False,
+    offset: Annotated[int, Field(ge=0, description="Sections to skip (next_offset).")] = 0,
+    max_chars: Annotated[int, Field(ge=500, le=100000, description="Text budget.")] = 15000,
 ) -> dict[str, Any]:
-    """Read the full text of a law, regulation, court vote or opinion as sections (articles, notes, headings).
+    """Read the text of a law, regulation, court vote or opinion as sections (articles, notes, headings).
 
-    Each section has `id`, `label` ('ماده 10', 'تبصره 1'), `text`, `status` ('amended', 'repealed', 'opinion'; absent
-    when plain) and `history: true` when qv_article_history can show its amendments. Long laws are paged by
-    `offset`/`next_offset` within `max_chars`; the civil code has about 1,500 sections and takes about 15 s to load
-    the first time. Get the id from qv_search. Use `article` to answer "what does article N say".
+    Sections: `id`, `label`, `text`, `status` (amended, repealed, opinion), `history: true` (see qv_article_history).
+    Paged by `offset`/`next_offset` within `max_chars`; the civil code takes about 15 s. Use `article` for one article.
     """
     if date:
         date = ascii_digits(date).strip().replace("-", "/")
@@ -167,11 +161,9 @@ async def qv_law(
 
 @tool("Law metadata")
 async def qv_law_info(ids: IDS) -> dict[str, Any]:
-    """Metadata of a law: type, approving body, approval, notification and gazette dates and numbers, last status,
-    effective date, executing bodies and recipients of the copy.
+    """Metadata of a law: type, approver, approval, notification and gazette data, status, executing bodies.
 
-    Use after qv_search to cite a law ("approved 1318/..., published in gazette no. ...") or to check its
-    type. Court votes and opinions carry almost no metadata. Dates are Jalali.
+    Use to cite a law or check its type. Court votes and opinions carry almost none.
     """
     page = await _page("/Law/Attribute/", {"IDS": ids})
     out: dict[str, Any] = {"id": ids} | _head(page)
@@ -218,12 +210,11 @@ def parse_events(fragment: str) -> list[dict[str, Any]]:
 @tool("Amendments of a law")
 async def qv_amendments(
     ids: IDS,
-    limit: Annotated[int, Field(ge=1, le=100, description="Max amending/amended laws listed per direction.")] = 30,
+    limit: Annotated[int, Field(ge=1, le=100, description="Max laws per direction.")] = 30,
 ) -> dict[str, Any]:
     """Which laws amended this one, which this one amends, and which of its articles were amended.
 
-    Returns `amended_by` and `amends` (id, title, approval date) and `articles`: section id, label, number of
-    changes and the latest change. Read one article's full history with qv_article_history(section_id).
+    Returns `amended_by`, `amends` and `articles` (section id, label, changes, latest). Full history: qv_article_history.
     """
     page = await _page("/Law/StatusIndex/", {"IDS": ids})
     out: dict[str, Any] = {"id": ids}
@@ -252,14 +243,11 @@ async def qv_amendments(
 
 @tool("History of one article")
 async def qv_article_history(
-    section_id: Annotated[
-        str, Field(pattern=r"^\d{1,12}$", description="Section id from qv_law (items marked history) or qv_amendments.")
-    ],
+    section_id: Annotated[str, Field(pattern=r"^\d{1,12}$", description="Section id from qv_law or qv_amendments.")],
 ) -> dict[str, Any]:
     """Every amendment of one article: type (اصلاحی...), date, the amending law and the replacing text.
 
-    Use after qv_law or qv_amendments when asked how an article changed. Oldest change first. An article that
-    was never amended returns an empty list.
+    Oldest change first; empty if never amended.
     """
     page = await _page(f"/Law/SectionStatus/{section_id}", {})
     return {"section_id": section_id, "events": parse_events(page)}
@@ -268,13 +256,11 @@ async def qv_article_history(
 @tool("Related regulations, votes and opinions")
 async def qv_related(
     ids: IDS,
-    limit: Annotated[int, Field(ge=1, le=200, description="Max related documents returned per group.")] = 30,
+    limit: Annotated[int, Field(ge=1, le=200, description="Max per group.")] = 30,
 ) -> dict[str, Any]:
-    """Documents related to a law: other laws, and regulations, court votes and legal opinions that cite or
-    interpret it (hundreds for the civil code, newest first).
+    """Documents related to a law: other laws, and regulations, votes and opinions that cite it (newest first).
 
-    Returns `laws` and `others`, each with id, title and date; read any with qv_law. Votes of the
-    Administrative Justice Court and opinions are listed by title only.
+    Returns `laws` and `others` (id, title, date); read any with qv_law.
     """
     page = await _page("/Law/RelatedIndex/", {"IDS": ids})
     out: dict[str, Any] = {"id": ids}

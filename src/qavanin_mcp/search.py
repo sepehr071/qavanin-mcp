@@ -140,61 +140,48 @@ async def _search(params: dict[str, Any], filtered: bool, has_query: bool) -> di
 async def qv_search(
     query: Annotated[
         str | None,
-        Field(max_length=200, description="Words to find, Persian or Arabic letters, e.g. 'مالیات بر ارزش افزوده'."),
+        Field(max_length=200, description="Words to find, e.g. 'مالیات بر ارزش افزوده'."),
     ] = None,
-    in_text: Annotated[bool, Field(description="Search the full text of every law, not only the titles.")] = False,
+    in_text: Annotated[bool, Field(description="Search full text, not only titles.")] = False,
     match: Annotated[
         Literal["all_words", "phrase", "part_of_word", "any_word"],
-        Field(
-            description="'all_words' every word as a whole word, 'phrase' words adjacent, 'part_of_word' substring "
-            "match (the site default, widest), 'any_word' at least one whole word."
-        ),
+        Field(description="all_words: every whole word; phrase: adjacent; part_of_word: substring (widest); any_word."),
     ] = "all_words",
     kind: Annotated[
         Literal["law", "regulation", "vote", "opinion"] | None,
-        Field(description="'law' (Majlis statutes), 'regulation', 'vote' (court rulings), 'opinion' (legal opinions)."),
+        Field(description="law (Majlis statutes), regulation, vote (court rulings), opinion."),
     ] = None,
     approver_id: Annotated[
         list[int] | None,
-        Field(max_length=10, description="Approving body ids from qv_lookup(kind='approver'); several are OR-ed."),
+        Field(max_length=10, description="Ids from qv_lookup(kind='approver'); OR-ed."),
     ] = None,
     executor_id: Annotated[
-        list[int] | None, Field(max_length=10, description="Executing body ids from qv_lookup(kind='executor').")
+        list[int] | None, Field(max_length=10, description="Ids from qv_lookup(kind='executor').")
     ] = None,
     subject_id: Annotated[
-        list[int] | None, Field(max_length=10, description="Subject ids from qv_lookup(kind='subject').")
+        list[int] | None, Field(max_length=10, description="Ids from qv_lookup(kind='subject').")
     ] = None,
-    type_id: Annotated[
-        list[int] | None, Field(max_length=10, description="Document type ids from qv_lookup(kind='type').")
-    ] = None,
+    type_id: Annotated[list[int] | None, Field(max_length=10, description="Ids from qv_lookup(kind='type').")] = None,
     status: Annotated[
         Literal["valid", "trial", "temporary", "repealed", "moot", "enforced", "extended"] | None,
-        Field(description="Legal status. 'repealed' = منسوخه; 'moot' = بااجرامنتفی می شود. 'valid' undercounts."),
+        Field(description="Legal status; 'valid' undercounts."),
     ] = None,
-    list_id: Annotated[
-        int | None, Field(description="A curated list id from qv_lookup(kind='list'), e.g. 113 for the latest laws.")
-    ] = None,
-    approved_from: Annotated[str | None, Field(description="Approval date from, Jalali 'YYYY/MM/DD'.")] = None,
-    approved_to: Annotated[str | None, Field(description="Approval date to, Jalali 'YYYY/MM/DD'.")] = None,
-    command_no: Annotated[
-        str | None, Field(description="Notification number (شماره ابلاغ), digits, substring.")
-    ] = None,
-    newspaper_no: Annotated[
-        str | None, Field(description="Official gazette number (شماره روزنامه رسمی), digits, substring.")
-    ] = None,
+    list_id: Annotated[int | None, Field(description="Id from qv_lookup(kind='list'), e.g. 113 latest laws.")] = None,
+    approved_from: Annotated[str | None, Field(description="Jalali 'YYYY/MM/DD'.")] = None,
+    approved_to: Annotated[str | None, Field(description="Jalali 'YYYY/MM/DD'.")] = None,
+    command_no: Annotated[str | None, Field(description="شماره ابلاغ, digits, substring.")] = None,
+    newspaper_no: Annotated[str | None, Field(description="شماره روزنامه رسمی, digits, substring.")] = None,
     sort: Annotated[
         Literal["newest", "oldest", "title"],
-        Field(description="By approval date, or 'title' (alphabetical by database collation; stable for paging)."),
+        Field(description="By approval date, or alphabetical 'title' (stable for paging)."),
     ] = "newest",
-    page: Annotated[int, Field(ge=1, le=10000, description="Page number, from 1.")] = 1,
-    limit: Annotated[int, Field(ge=1, le=100, description="Results per page.")] = 25,
+    page: Annotated[int, Field(ge=1, le=10000, description="From 1.")] = 1,
+    limit: Annotated[int, Field(ge=1, le=100)] = 25,
 ) -> dict[str, Any]:
-    """Search the Iranian law and regulation database (qavanin.ir, 168,000 documents) and list matching titles.
+    """Search the Iranian law and regulation database (qavanin.ir) and list matching titles.
 
-    Returns total hits, page count and items with `id` (the IDS to give qv_law, qv_law_info, qv_amendments and
-    qv_related), title, approval date (Jalali), approving body and `repealed` for repealed ones. Text search shows
-    no snippets. Use for "which law covers X", "all regulations of body Y in a date range" and "latest laws".
-    Sorting by date has many ties, so paging a long list may repeat or skip a row; narrow the filters instead.
+    Returns total, pages and items (`id` for the other tools, title, approved, approver, `repealed`). No snippets.
+    Date sort has ties, so deep paging may repeat or skip rows; narrow the filters instead.
     """
     size = next(s for s in SIZES if limit <= s)
     sort_col, desc = SORT[sort]
@@ -245,21 +232,17 @@ async def _paged(path: str, term: str, page: int, extra: dict[str, Any] | None =
 async def qv_lookup(
     kind: Annotated[
         Literal["approver", "executor", "subject", "type", "status", "list"],
-        Field(
-            description="'approver' (مرجع تصویب), 'executor' (دستگاه مجری), 'subject' (موضوع), 'type' (نوع مصوبه), "
-            "'status' (وضعیت) or 'list' (curated lists)."
-        ),
+        Field(description="approver (مرجع تصویب), executor (دستگاه مجری), subject (موضوع), type, status or list."),
     ],
     query: Annotated[
         str | None,
-        Field(max_length=100, description="Name fragment, e.g. 'دیوان' or 'بانک'. Empty lists the most used."),
+        Field(max_length=100, description="Name fragment, e.g. 'دیوان'. Empty lists the most used."),
     ] = None,
-    page: Annotated[int, Field(ge=1, le=100, description="Page of 20 for approver, executor and subject.")] = 1,
+    page: Annotated[int, Field(ge=1, le=100, description="Pages of 20 (approver, executor, subject).")] = 1,
 ) -> dict[str, Any]:
     """Find the ids that qv_search filters take: approving bodies, executing bodies, subjects, types, statuses, lists.
 
-    Returns items with `id` and name; approvers, executors and subjects also have `count` (documents) and are
-    paged by 20. Example: kind='approver', query='مجلس' gives the Majlis id to pass as approver_id.
+    Returns items with `id` and name (plus `count` for approver, executor, subject).
     """
     term = fa(query or "").strip()
     if kind in ("approver", "executor"):
