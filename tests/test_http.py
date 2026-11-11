@@ -1,3 +1,4 @@
+import asyncio
 import re
 from pathlib import Path
 
@@ -5,7 +6,7 @@ import httpx
 import pytest
 from conftest import fixture
 
-from qavanin_mcp import http
+from qavanin_mcp import http, server
 
 pytestmark = pytest.mark.anyio
 
@@ -74,3 +75,13 @@ async def test_http_errors_become_tool_errors(client, api):
     api["/Law/TreeText/"] = lambda r: httpx.Response(404, text="")
     result = await client.call_tool("qv_law", {"ids": "2"})
     assert result.is_error and "Not found" in result.content[0].text
+
+
+async def test_call_past_deadline_fails_with_clear_error(monkeypatch):
+    monkeypatch.setattr(server, "DEADLINE", 0.05)
+
+    async def hang():
+        await asyncio.sleep(5)
+
+    with pytest.raises(http.ApiError, match="did not answer within 0.05 s"):
+        await server.compact(hang)()

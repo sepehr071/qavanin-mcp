@@ -1,5 +1,6 @@
 """MCP server entry point: registers every read-only qavanin.ir tool."""
 
+import asyncio
 import functools
 import json
 import logging
@@ -8,7 +9,12 @@ from mcp.server import MCPServer
 from mcp.types import ToolAnnotations
 
 from . import __version__, law, search  # noqa: F401  (imports register the tools)
+from .http import ApiError
 from .registry import TOOLS
+
+# Seconds one tool call may take, retries included: the mcpfarsi router gives this slow site 45 s, and a clear error
+# before that beats a hang.
+DEADLINE = 40
 
 INSTRUCTIONS = """\
 Unofficial, read-only access to qavanin.ir (سامانه ملی قوانین و مقررات جمهوری اسلامی ایران), the national database of
@@ -39,11 +45,18 @@ mcp = MCPServer(
 
 
 def compact(fn):
-    """Return the tool result as one compact JSON text block (the SDK default sends it twice, indented)."""
+    """Return the tool result as one compact JSON text block (the SDK default sends it twice, indented).
+
+    The call fails with ApiError once it runs past DEADLINE.
+    """
 
     @functools.wraps(fn)
     async def run(*args, **kwargs):
-        return json.dumps(await fn(*args, **kwargs), ensure_ascii=False, separators=(",", ":"))
+        try:
+            result = await asyncio.wait_for(fn(*args, **kwargs), DEADLINE)
+        except asyncio.TimeoutError:
+            raise ApiError(f"qavanin.ir did not answer within {DEADLINE} s. Try again in a minute.") from None
+        return json.dumps(result, ensure_ascii=False, separators=(",", ":"))
 
     return run
 

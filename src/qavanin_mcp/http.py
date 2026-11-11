@@ -88,7 +88,9 @@ def _get_client() -> tuple[httpx.AsyncClient, asyncio.Semaphore]:
                 max_connections=2 * MAX_CONCURRENCY,
             ),
             headers=HEADERS,
-            timeout=60,  # the origin is slow: 1-18 s typical, the civil code about 14 s, rare 40 s hangs
+            # The origin is slow: 1-18 s typical, the civil code about 14 s, rare 40 s hangs. 30 s per attempt lets a
+            # hung request end early enough for a retry within the tool DEADLINE (40 s).
+            timeout=httpx.Timeout(25, connect=5),
             limits=httpx.Limits(max_connections=2 * MAX_CONCURRENCY),
             follow_redirects=True,
             trust_env=False,
