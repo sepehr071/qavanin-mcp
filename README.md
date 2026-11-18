@@ -15,7 +15,7 @@ Search about 168,000 documents by title or full text, read a law or a single art
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_qavanin--mcp-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=qavanin&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22qavanin-mcp%22%5D%7D)
 
-[For AI agents](#for-ai-agents) · [Why](#why) · [What it can do](#what-it-can-do) · [Quick start](#quick-start) · [Tools](#tools) · [How it works](#how-it-works) · [Good to know](#good-to-know) · [FAQ](#faq) · [Configuration](#configuration) · [فارسی](#فارسی) · [Development](#development) · [Related](#related-servers) · [Disclaimer](#disclaimer) · [License](#license)
+[For AI agents](#for-ai-agents) · [Why](#why) · [What it can do](#what-it-can-do) · [Quick start](#quick-start) · [Tools](#tools) · [Good to know](#good-to-know) · [FAQ](#faq) · [Configuration](#configuration) · [فارسی](#فارسی) · [Development](#development) · [Related](#related-servers) · [Disclaimer](#disclaimer) · [License](#license)
 
 ---
 
@@ -166,21 +166,6 @@ All tools return compact JSON. Document ids from `qv_search` go to the other too
 | `qv_related` | Regulations, court votes and legal opinions related to a law |
 
 All 7 tools are annotated `readOnlyHint: true`.
-
-## How it works
-
-```text
-  AI agent  (Claude, Cursor, Copilot, ...)
-      │
-      │  MCP over stdio
-      ▼
-  qavanin-mcp  (runs on your machine)
-      │
-      │  HTTPS
-      └──────▶  qavanin.ir   laws, regulations, court votes, opinions
-```
-
-`qavanin-mcp` runs locally and reads the same pages the qavanin.ir website serves (server-rendered HTML plus two small JSON lookups). There is no hosted server in between and no API key. The site's bot-check cookie is solved in Python, so no browser is needed.
 
 ## Good to know
 
